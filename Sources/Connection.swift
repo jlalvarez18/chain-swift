@@ -9,6 +9,7 @@
 import Foundation
 import HTTP
 import JSON
+import Vapor
 
 let blacklistAttributes = Set([
     "after",
@@ -19,6 +20,12 @@ let blacklistAttributes = Set([
     "reference_data",
     "tags",
 ])
+
+extension HeaderKey {
+    static public var chainRequestID: HeaderKey {
+        return HeaderKey("Chain-Request-Id")
+    }
+}
 
 class Connection {
     
@@ -31,15 +38,17 @@ class Connection {
     // https.Agent used to provide TLS config.
     let agent: String?
     
-    init(baseUrl: String, token: String?, agent: String?) {
+    fileprivate let client: ClientFactoryProtocol
+    
+    init(client: ClientFactoryProtocol, baseUrl: String, token: String?, agent: String?) {
+        self.client = client
         self.baseUrlString = baseUrl
         self.token = token
         self.agent = agent
     }
     
-    func request(path: String, body: [String: Any] = [:]) throws {
+    func request(path: String, body: [String: Any] = [:]) throws -> ResponseRepresentable {
         let bodyJSON = try snakeize(dict: body)
-        let bodyData = try bodyJSON.makeBytes()
         
         var headers: [HeaderKey: String] = [
             HeaderKey.accept: "application/json",
@@ -59,13 +68,52 @@ class Connection {
         var url = URL(string: self.baseUrlString)!
         url = url.appendingPathComponent(path)
         
-        let req = Request(method: .post, uri: url.absoluteString, headers: headers, body: .data(bodyData))
+        let res = try client.post(url.absoluteString, headers, bodyJSON)
         
-        print(req)
+        guard let _ = res.headers[.chainRequestID] else {
+            throw Abort(.badRequest, reason: "Chain-Request-Id header is missing. There may be an issue with your proxy or network configuration.")
+        }
+        
+        if res.status == .noContent {
+            return res
+        }
+        
+        guard let json = res.json else {
+            throw Abort(.badRequest, reason: "could not parse JSON response")
+        }
+        
+        guard (res.status.statusCode/100) == 2 else {
+            throw Abort(res.status)
+        }
+        
+        // After processing the response, convert snakecased field names to
+        // camelcase to match language conventions.
+        return try camelize(json: json)
     }
 }
 
 fileprivate extension Connection {
+    
+    func camelize(json: JSON) throws -> JSON {
+        return try camelize(data: json.wrapped)
+    }
+    
+    func camelize(data: StructuredData) throws -> JSON {
+        switch data {
+        case .object(let dict):
+            return try camelize(dict: dict)
+        
+        case .array(let a):
+            let f = try a.map { (data) -> StructuredData in
+                return try camelize(data: data).wrapped
+            }
+            
+            return JSON(f)
+            
+        default:
+            return JSON(data)
+        }
+    }
     
     func camelize(dict: [String: Any]) throws -> JSON {
         var json = JSON()
