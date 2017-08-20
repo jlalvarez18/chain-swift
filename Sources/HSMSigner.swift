@@ -45,16 +45,12 @@ class HSMSigner {
         signer.add(key: key)
     }
     
-    func sign(template: Template, completion: (Template) -> Void) throws {
+    func sign(template: Template) throws -> Template {
         var nextTemplate = template
-        
-        defer {
-            completion(nextTemplate)
-        }
         
         // Return early if no signers
         guard self.signers.count > 0 else {
-            return
+            return nextTemplate
         }
         
         for (_, signer) in self.signers {
@@ -67,50 +63,58 @@ class HSMSigner {
             
             nextTemplate = try res.makeResponse().json ?? JSON()
         }
+        
+        return nextTemplate
     }
     
-    func signBatch(templates t: [Template], completion: (BatchResponse) -> Void) throws {
-        var nextTemplates = t.filter { $0.wrapped != .null }
-        
-        var errors: [JSON] = Array(repeating: .null, count: t.count)
-        
-        defer {
-            let resp = BatchResponse(responses: nextTemplates)
-            completion(resp)
-        }
+    func signBatch(templates t: [Template]) throws -> BatchResponse {
+        var templates = t.filter { $0.wrapped != .null }
         
         // Return early if no signers
         guard self.signers.count > 0 else {
-            return
+            return BatchResponse(responses: templates)
         }
         
-        let originalIndex: [Int] = Array(0...nextTemplates.count)
-        
-        var nextOriginalIndex: [Int] = []
+        var originalIndexes: [Int] = Array(0...templates.count)
+        var errors: [JSON] = Array(repeating: .null, count: t.count)
         
         for (_, signer) in self.signers {
+            var nextOriginalIndexes: [Int] = []
+            
             let body: [String: Any] = [
-                "transactions": nextTemplates,
+                "transactions": templates,
                 "xpubs": signer.xpubs
             ]
             
             let res = try signer.connection.request(path: "/sign-transaction", body: body).makeResponse()
             
-            let resposes = res.json?.array ?? []
-            
-            let batchResponse = BatchResponse(responses: resposes)
+            let batchResponse = BatchResponse(response: res)
             
             for (index, success) in batchResponse.successes.enumerated() {
-                nextTemplates.append(success)
-                nextOriginalIndex.append(originalIndex[index])
+                templates.append(success)
+                nextOriginalIndexes.append(originalIndexes[index])
             }
             
             for (index, error) in batchResponse.errors.enumerated() {
-                errors[originalIndex[index]] = error
+                errors[originalIndexes[index]] = error
+            }
+            
+            originalIndexes = nextOriginalIndexes
+        }
+        
+        var responses: [JSON] = []
+        
+        for (index, template) in templates.enumerated() {
+            responses[originalIndexes[index]] = template
+        }
+        
+        for (index, error) in errors.enumerated() {
+            if error != .null {
+                responses[index] = error
             }
         }
         
-        
+        return BatchResponse(responses: responses)
     }
     
     

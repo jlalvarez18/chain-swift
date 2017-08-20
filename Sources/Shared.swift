@@ -8,6 +8,7 @@
 
 import Foundation
 import JSON
+import HTTP
 
 class BatchResponse {
     
@@ -32,5 +33,9 @@ class BatchResponse {
         
         self.successes = _successes
         self.errors = _errors
+    }
+    
+    convenience init(response: Response) {
+        self.init(responses: response.json?.array ?? [])
     }
 }
