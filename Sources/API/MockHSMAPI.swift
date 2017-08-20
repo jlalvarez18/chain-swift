@@ -1,5 +1,5 @@
 //
-//  MockHSMKeys.swift
+//  MockHSMAPI.swift
 //  Chain-Swift
 //
 //  Created by Juan Alvarez on 8/20/17.
@@ -24,7 +24,7 @@ struct HSMKey {
     }
 }
 
-class MockHSM {
+class MockHSMAPI {
     
     let client: Client
     let signerConnection: Connection
@@ -43,7 +43,7 @@ class MockHSM {
         let res = try self.client.request(path: "/mockhsm/create-key", body: body)
         
         guard let json = res.json else {
-            throw Abort(.badRequest)
+            throw Abort(.badRequest, reason: "Missing JSON response")
         }
         
         return try HSMKey(json: json)
@@ -54,7 +54,7 @@ class MockHSM {
     }
 }
 
-extension MockHSM: Queryable {
+extension MockHSMAPI: Queryable {
     
     /**
      Get one page of MockHsm keys, optionally filtered to specified aliases.

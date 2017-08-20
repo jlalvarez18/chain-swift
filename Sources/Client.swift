@@ -14,21 +14,24 @@ class Client {
     static var repositoryName: String = "chain_swift_client"
     
     let connection: Connection
+    let signer: HSMSigner
     
-    lazy var signer: HSMSigner = {
-        return HSMSigner()
-    }()
-    
-    lazy var mockHSM: MockHSM = {
+    lazy var mockHsm: MockHSMAPI = {
         let url = "\(self.connection.baseUrlString)/mockhsm"
         let connection = Connection(baseUrl: url, token: self.connection.token, agent: self.connection.agent)
         
-        return MockHSM(client: self, signerConnection: connection)
+        return MockHSMAPI(client: self, signerConnection: connection)
+    }()
+    
+    lazy var accessTokens: AccessTokensAPI = {
+        return AccessTokensAPI(client: self)
     }()
     
     init(url: String?, accessToken: String, userAgent: String) {
         let baseURLString = url ?? "http://localhost:1999"
+        
         self.connection = Connection(baseUrl: baseURLString, token: accessToken, agent: userAgent)
+        self.signer = HSMSigner()
     }
     
     required convenience init(config: Config) throws {
@@ -41,6 +44,17 @@ class Client {
     
     func request(path: String, body: JSON) throws -> Response {
         return try self.connection.request(path: path, body: body)
+    }
+    
+    func create(path: String, params: JSON, skipArray: Bool = false) throws -> Response {
+        var body = params
+        try body.set("clientToken", UUID().uuidString)
+        
+        if !skipArray {
+            body = [body]
+        }
+        
+        return try self.request(path: path, body: body)
     }
     
     func query(owner: Queryable, path: String, params: JSON) throws -> Page {
