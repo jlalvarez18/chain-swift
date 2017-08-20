@@ -38,16 +38,19 @@ class Connection {
     // https.Agent used to provide TLS config.
     let agent: String?
     
-    fileprivate let client: ClientFactoryProtocol
+    var client: ClientFactoryProtocol?
     
-    init(client: ClientFactoryProtocol, baseUrl: String, token: String?, agent: String?) {
-        self.client = client
+    init(baseUrl: String, token: String?, agent: String?) {
         self.baseUrlString = baseUrl
         self.token = token
         self.agent = agent
     }
     
     func request(path: String, body: [String: Any] = [:]) throws -> ResponseRepresentable {
+        guard let client = self.client else {
+            throw Abort(.badRequest)
+        }
+        
         let bodyJSON = try snakeize(dict: body)
         
         var headers: [HeaderKey: String] = [
