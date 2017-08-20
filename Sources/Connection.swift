@@ -46,12 +46,12 @@ class Connection {
         self.agent = agent
     }
     
-    func request(path: String, body: [String: Any] = [:]) throws -> ResponseRepresentable {
+    func request(path: String, body: JSON = JSON()) throws -> Response {
         guard let client = self.client else {
             throw Abort(.badRequest)
         }
         
-        let bodyJSON = try snakeize(dict: body)
+        let bodyJSON = try snakeize(json: body)
         
         var headers: [HeaderKey: String] = [
             HeaderKey.accept: "application/json",
@@ -91,7 +91,7 @@ class Connection {
         
         // After processing the response, convert snakecased field names to
         // camelcase to match language conventions.
-        return try camelize(json: json)
+        return try camelize(json: json).makeResponse()
     }
 }
 
@@ -118,7 +118,7 @@ fileprivate extension Connection {
         }
     }
     
-    func camelize(dict: [String: Any]) throws -> JSON {
+    func camelize(dict: [String: StructuredData]) throws -> JSON {
         var json = JSON()
         
         for (key, value) in dict {
@@ -126,8 +126,8 @@ fileprivate extension Connection {
             var newValue = value
             
             if !blacklistAttributes.contains(key) {
-                if let valueDict = value as? [String: Any] {
-                    newValue = try camelize(dict: valueDict)
+                if let valueDict = value.object {
+                    newValue = try camelize(dict: valueDict).wrapped
                 }
             }
             
@@ -136,8 +136,32 @@ fileprivate extension Connection {
         
         return json
     }
+}
+
+fileprivate extension Connection {
     
-    func snakeize(dict: [String: Any]) throws -> JSON {
+    func snakeize(json: JSON) throws -> JSON {
+        return try snakeize(data: json.wrapped)
+    }
+    
+    func snakeize(data: StructuredData) throws -> JSON {
+        switch data {
+        case .object(let dict):
+            return try snakeize(dict: dict)
+            
+        case .array(let a):
+            let f = try a.map { (data) -> StructuredData in
+                return try snakeize(data: data).wrapped
+            }
+            
+            return JSON(f)
+            
+        default:
+            return JSON(data)
+        }
+    }
+    
+    func snakeize(dict: [String: StructuredData]) throws -> JSON {
         var json = JSON()
         
         for (key, value) in dict {
@@ -149,8 +173,8 @@ fileprivate extension Connection {
                 try json.set(newKey, newValue)
             } else {
                 if !blacklistAttributes.contains(key) {
-                    if let valueDict = value as? [String: Any] {
-                        newValue = try snakeize(dict: valueDict)
+                    if let valueDict = value.object {
+                        newValue = try snakeize(dict: valueDict).wrapped
                     }
                 }
                 

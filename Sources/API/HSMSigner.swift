@@ -54,14 +54,13 @@ class HSMSigner {
         }
         
         for (_, signer) in self.signers {
-            let body: [String: Any] = [
-                "transactions": [nextTemplate],
-                "xpubs": signer.xpubs
-            ]
+            var body = JSON()
+            try body.set("transactions", [nextTemplate])
+            try body.set("xpubs", signer.xpubs)
             
             let res = try signer.connection.request(path: "/sign-transaction", body: body)
             
-            nextTemplate = try res.makeResponse().json ?? JSON()
+            nextTemplate = res.makeResponse().json ?? JSON()
         }
         
         return nextTemplate
@@ -81,10 +80,9 @@ class HSMSigner {
         for (_, signer) in self.signers {
             var nextOriginalIndexes: [Int] = []
             
-            let body: [String: Any] = [
-                "transactions": templates,
-                "xpubs": signer.xpubs
-            ]
+            var body = JSON()
+            try body.set("transactions", templates)
+            try body.set("xpubs", signer.xpubs)
             
             let res = try signer.connection.request(path: "/sign-transaction", body: body).makeResponse()
             

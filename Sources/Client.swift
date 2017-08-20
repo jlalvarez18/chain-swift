@@ -11,12 +11,22 @@ import Vapor
 
 class Client {
     
-    let connection: Connection
-    
     static var repositoryName: String = "chain_swift_client"
     
-    init(url: String?, accessToken: String, userAgent: String)
-    {
+    let connection: Connection
+    
+    lazy var signer: HSMSigner = {
+        return HSMSigner()
+    }()
+    
+    lazy var mockHSM: MockHSM = {
+        let url = "\(self.connection.baseUrlString)/mockhsm"
+        let connection = Connection(baseUrl: url, token: self.connection.token, agent: self.connection.agent)
+        
+        return MockHSM(client: self, signerConnection: connection)
+    }()
+    
+    init(url: String?, accessToken: String, userAgent: String) {
         let baseURLString = url ?? "http://localhost:1999"
         self.connection = Connection(baseUrl: baseURLString, token: accessToken, agent: userAgent)
     }
@@ -27,6 +37,44 @@ class Client {
         let agent: String = try config.get("agent")
         
         self.init(url: url, accessToken: token, userAgent: agent)
+    }
+    
+    func request(path: String, body: JSON) throws -> Response {
+        return try self.connection.request(path: path, body: body)
+    }
+    
+    func query(owner: Queryable, path: String, params: JSON) throws -> Page {
+        let response = try self.request(path: path, body: params)
+        
+        // then create a page object
+        return try Page(data: response.json ?? JSON(), client: self, owner: owner)
+    }
+    
+    func queryAll(owner: Queryable, params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
+        var nextParams = params
+        
+        var shouldContinue = true
+        
+        while shouldContinue {
+            let page = try owner.query(params: nextParams)
+            
+            let items = page.items.array ?? []
+            
+            for item in items {
+                if itemBlock(item) == false {
+                    shouldContinue = false
+                    continue
+                }
+            }
+            
+            if page.lastPage {
+                shouldContinue = false
+            } else {
+                nextParams = page.next
+            }
+        }
+        
+        completion(nil)
     }
 }
 
