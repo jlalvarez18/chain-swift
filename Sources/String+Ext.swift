@@ -60,11 +60,11 @@ extension String {
     }
     
     func isAllCaps() -> Bool {
-        let pattern = "^[A-Z]+$"
-        let regex = try! NSRegularExpression(pattern: pattern, options: [])
-        
-        let count = regex.numberOfMatches(in: self, options: [], range: NSMakeRange(0, self.characters.count))
-        
-        return count != 0
+        return try! Regex("^[A-Z]+$").test(input: self)
+    }
+    
+    func containsCapitalLetters() -> Bool {
+        return try! Regex("[A-Z]").test(input: self)
     }
 }
+
