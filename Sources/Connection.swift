@@ -89,9 +89,7 @@ class Connection {
             throw Abort(res.status)
         }
         
-        // After processing the response, convert snakecased field names to
-        // camelcase to match language conventions.
-        return try camelize(json: json).makeResponse()
+        return try json.makeResponse()
     }
 }
 

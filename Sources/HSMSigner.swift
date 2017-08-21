@@ -114,11 +114,4 @@ class HSMSigner {
         
         return BatchResponse(responses: responses)
     }
-    
-    
-    
-    
-    
-    
-    
 }

@@ -34,10 +34,10 @@ struct CoreInfo: JSONInitializable {
         let isPlainHttp: Bool
         
         init(json: JSON) throws {
-            self.isLocalhostAuth = try json.get("isLocalhostAuth")
-            self.isMockHsm = try json.get("isMockHsm")
-            self.isReset = try json.get("isReset")
-            self.isPlainHttp = try json.get("isPlainHttp")
+            self.isLocalhostAuth = try json.get("is_localhost_auth")
+            self.isMockHsm = try json.get("is_mockHsm")
+            self.isReset = try json.get("is_reset")
+            self.isPlainHttp = try json.get("is_plain_http")
         }
     }
     

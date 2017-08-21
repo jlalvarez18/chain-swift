@@ -49,6 +49,6 @@ class Page<T: JSONInitializable> {
     func nextPage() throws -> Page<T> {
         let res = try self.client.request(path: self.nextPath, body: self.next)
         
-        return try Page<T>(response: res, client: self.client, path: self.path, nextPath: nextPath)
+        return try Page<T>(response: res, client: self.client, path: self.path, nextPath: self.nextPath)
     }
 }
