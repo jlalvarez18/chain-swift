@@ -27,6 +27,10 @@ class Client {
         return AccessTokensAPI(client: self)
     }()
     
+    lazy var authorizationGrants: AuthorizationGrantsAPI = {
+        return AuthorizationGrantsAPI(client: self)
+    }()
+    
     init(url: String?, accessToken: String, userAgent: String) {
         let baseURLString = url ?? "http://localhost:1999"
         

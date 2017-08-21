@@ -34,7 +34,10 @@ class AccessTokensAPI {
         self.client = client
     }
     
-    func create(params: JSON) throws -> AccessToken {
+    func create(id: String) throws -> AccessToken {
+        var params = JSON()
+        try params.set("id", id)
+        
         let res = try self.client.create(path: "/create-access-token", params: params, skipArray: true)
         
         guard let json = res.json else {

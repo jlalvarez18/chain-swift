@@ -1,7 +1,7 @@
 import XCTest
 @testable import Chain_Swift
 
-class reposTests: XCTestCase {
+class ChainTests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
