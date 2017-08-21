@@ -35,6 +35,10 @@ class Client {
         return AccountsAPI(client: self)
     }()
     
+    lazy var assets: AssetsAPI = {
+        return AssetsAPI(client: self)
+    }()
+    
     init(url: String?, accessToken: String, userAgent: String) {
         let baseURLString = url ?? "http://localhost:1999"
         

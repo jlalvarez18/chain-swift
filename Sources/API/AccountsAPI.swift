@@ -9,24 +9,24 @@
 import Foundation
 import Vapor
 
-struct AccountKey: JSONInitializable {
-    let rootXpub: String
-    let accountXpub: String
-    let assetDerivationPath: JSON
-    
-    init(json: JSON) throws {
-        self.rootXpub = try json.get("root_xpub")
-        self.accountXpub = try json.get("account_xpub")
-        self.assetDerivationPath = try json.get("asset_derivation_path")
-    }
-}
-
 struct Account: JSONInitializable {
+    struct Key: JSONInitializable {
+        let rootXpub: String
+        let accountXpub: String
+        let assetDerivationPath: JSON
+        
+        init(json: JSON) throws {
+            self.rootXpub = try json.get("root_xpub")
+            self.accountXpub = try json.get("account_xpub")
+            self.assetDerivationPath = try json.get("asset_derivation_path")
+        }
+    }
+    
     let id: String
     let alias: String
     let quorum: Int
     let tags: JSON
-    let keys: [AccountKey]
+    let keys: [Key]
     
     init(json: JSON) throws {
         self.id = try json.get("id")
@@ -38,7 +38,7 @@ struct Account: JSONInitializable {
         
         let keyItems = _keys.array ?? []
         
-        self.keys = try keyItems.map { try AccountKey(json: $0) }
+        self.keys = try keyItems.map { try Key(json: $0) }
     }
 }
 
@@ -50,10 +50,11 @@ struct AccountCreationRequest {
     
     func params() throws -> JSON {
         var params = JSON()
-        try params.set("alias", alias)
-        try params.set("rootXpubs", rootXpubs.map { $0.xpub })
-        try params.set("quorum", quorum)
-        try params.set("tags", tags)
+        
+        try params.set("alias", self.alias)
+        try params.set("rootXpubs", self.rootXpubs.map { $0.xpub })
+        try params.set("quorum", self.quorum)
+        try params.set("tags", self.tags)
         
         return params
     }
@@ -107,9 +108,9 @@ class AccountsAPI {
     }
     
     func createBatch(requests: [AccountCreationRequest]) throws -> BatchResponse {
-        let items = try requests.map { try $0.params() }
+        let params = try requests.map { try $0.params() }
         
-        return try self.client.createBatch(path: "/create-account", params: items)
+        return try self.client.createBatch(path: "/create-account", params: params)
     }
     
     func queryAll(params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
