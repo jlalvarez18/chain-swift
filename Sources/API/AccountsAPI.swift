@@ -60,15 +60,24 @@ struct AccountCreationRequest {
     }
 }
 
-struct Receiver: JSONInitializable {
+struct Receiver: JSONConvertible {
     let controlProgram: String
     let expiresAt: Date
     
     init(json: JSON) throws {
-        self.controlProgram = try json.get("controlProgram")
+        self.controlProgram = try json.get("control_program")
         
-        let expiresAtString: String = try json.get("expiresAt")
+        let expiresAtString: String = try json.get("expires_at")
         self.expiresAt = Date(rfc3339: expiresAtString)!
+    }
+    
+    func makeJSON() throws -> JSON {
+        var json = JSON()
+        
+        try json.set("control_program", self.controlProgram)
+        try json.set("expires_at", self.expiresAt.rfc3339)
+        
+        return json
     }
 }
 

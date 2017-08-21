@@ -47,6 +47,10 @@ class Client {
         return MockHSM(client: self, signerConnection: connection)
     }()
     
+    lazy var transactions: TransactionAPI = {
+        return TransactionAPI(client: self)
+    }()
+    
     init(url: String?, accessToken: String, userAgent: String) {
         let baseURLString = url ?? "http://localhost:1999"
         

@@ -18,7 +18,7 @@ struct AccessToken: JSONInitializable {
         self.id = try json.get("id")
         self.token = try json.get("token")
         
-        let createdAtString: String = try json.get("createdAt")
+        let createdAtString: String = try json.get("created_at")
         self.createdAt = Date(rfc3339: createdAtString)!
     }
 }

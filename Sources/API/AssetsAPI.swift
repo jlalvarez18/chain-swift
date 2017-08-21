@@ -30,15 +30,17 @@ struct Asset: JSONInitializable {
     let quorum: Int
     let defintion: JSON
     let tags: JSON
+    let isLocal: Bool
     
     init(json: JSON) throws {
         self.id = try json.get("id")
         self.alias = try json.get("alias")
-        self.issuanceProgram = try json.get("issuanceProgram")
+        self.issuanceProgram = try json.get("issuance_program")
         self.keys = try json.get("keys")
         self.quorum = try json.get("quorum")
         self.defintion = try json.get("defintion")
         self.tags = try json.get("tags")
+        self.isLocal = try json.get("is_local")
     }
 }
 

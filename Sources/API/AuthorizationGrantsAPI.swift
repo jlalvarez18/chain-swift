@@ -48,26 +48,26 @@ struct AuthorizationGrant: JSONInitializable {
     let guardData: DataType
     
     init(json: JSON) throws {
-        let type: String = try json.get("guardType")
+        let type: String = try json.get("guard_type")
         self.guardType = AuthGuardType(rawValue: type)!
         
         let policyType: String = try json.get("policy")
         self.policy = AuthGuardPolicy(rawValue: policyType)!
         
-        let dateString: String = try json.get("createdAt")
+        let dateString: String = try json.get("created_at")
         self.createdAt = Date(rfc3339: dateString)!
         
         self.protected = try json.get("protected")
         
         switch self.guardType {
         case .accessToken:
-            let tokenJSON: JSON = try json.get("guardData")
+            let tokenJSON: JSON = try json.get("guard_data")
             let token = try AccessTokenGuardData(json: tokenJSON)
             
             self.guardData = DataType.accessToken(token)
         
         case .x509:
-            let certJSON: JSON = try json.get("guardData")
+            let certJSON: JSON = try json.get("guard_data")
             let data = try X509GuardData(json: certJSON)
             
             self.guardData = DataType.X509Data(data)
