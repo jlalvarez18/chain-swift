@@ -16,13 +16,6 @@ class Client {
     let connection: Connection
     let signer: HSMSigner
     
-    lazy var mockHsm: MockHSM = {
-        let url = "\(self.connection.baseUrlString)/mockhsm"
-        let connection = Connection(baseUrl: url, token: self.connection.token, agent: self.connection.agent)
-        
-        return MockHSM(client: self, signerConnection: connection)
-    }()
-    
     lazy var accessTokens: AccessTokensAPI = {
         return AccessTokensAPI(client: self)
     }()
@@ -41,6 +34,17 @@ class Client {
     
     lazy var balances: BalancesAPI = {
         return BalancesAPI(client: self)
+    }()
+    
+    lazy var config: ConfigAPI = {
+        return ConfigAPI(client: self)
+    }()
+    
+    lazy var mockHsm: MockHSM = {
+        let url = "\(self.connection.baseUrlString)/mockhsm"
+        let connection = Connection(baseUrl: url, token: self.connection.token, agent: self.connection.agent)
+        
+        return MockHSM(client: self, signerConnection: connection)
     }()
     
     init(url: String?, accessToken: String, userAgent: String) {
