@@ -9,7 +9,7 @@
 import Foundation
 import Vapor
 
-struct AccessToken {
+struct AccessToken: JSONInitializable {
     let id: String
     let token: String
     let createdAt: Date
@@ -44,8 +44,12 @@ class AccessTokensAPI {
         return try AccessToken(json: json)
     }
     
-    func queryAll(params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
-        return try self.client.queryAll(owner: self, params: params, itemBlock: itemBlock, completion: completion)
+    func query(params: JSON) throws -> Page<AccessToken> {
+        return try self.client.query(path: "/list-access-tokens", params: params)
+    }
+    
+    func queryAll(params: JSON, itemBlock: (AccessToken) -> Bool, completion: (Error?) -> Void) throws {
+        return try self.client.queryAll(path: "/list-access-tokens", params: params, itemBlock: itemBlock, completion: completion)
     }
     
     func delete(id: String) throws -> Response {
@@ -53,12 +57,5 @@ class AccessTokensAPI {
         try body.set("id", id)
         
         return try self.client.request(path: "/delete-access-token", body: body)
-    }
-}
-
-extension AccessTokensAPI: Queryable {
-   
-    func query(params: JSON) throws -> Page {
-        return try self.client.query(owner: self, path: "/list-access-tokens", params: params)
     }
 }

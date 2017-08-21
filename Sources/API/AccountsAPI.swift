@@ -113,8 +113,22 @@ class AccountsAPI {
         return try self.client.createBatch(path: "/create-account", params: params)
     }
     
-    func queryAll(params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
-        return try self.client.queryAll(owner: self, params: params, itemBlock: itemBlock, completion: completion)
+    /**
+     * Get one page of accounts matching the specified query.
+     *
+     * @param {Object} params={} - Filter and pagination information.
+     * @param {String} params.filter - Filter string, see {@link https://chain.com/docs/core/build-applications/queries}.
+     * @param {Array<String|Number>} params.filterParams - Parameter values for filter string (if needed).
+     * @param {Number} params.pageSize - Number of items to return in result set.
+     * @param {pageCallback} [callback] - Optional callback. Use instead of Promise return value as desired.
+     * @returns {Promise<Page<Account>>} Requested page of results.
+     */
+    func query(params: JSON) throws -> Page<Account> {
+        return try self.client.query(path: "/list-accounts", params: params)
+    }
+    
+    func queryAll(params: JSON, itemBlock: (Account) -> Bool, completion: (Error?) -> Void) throws {
+        return try self.client.queryAll(path: "/list-accounts", params: params, itemBlock: itemBlock, completion: completion)
     }
     
     // MARK: Receiver
@@ -168,23 +182,6 @@ extension AccountsAPI {
         try params.set("expiresAt", expiresAt.rfc3339)
         
         return try createReceiver(with: params)
-    }
-}
-
-extension AccountsAPI: Queryable {
-    
-    /**
-     * Get one page of accounts matching the specified query.
-     *
-     * @param {Object} params={} - Filter and pagination information.
-     * @param {String} params.filter - Filter string, see {@link https://chain.com/docs/core/build-applications/queries}.
-     * @param {Array<String|Number>} params.filterParams - Parameter values for filter string (if needed).
-     * @param {Number} params.pageSize - Number of items to return in result set.
-     * @param {pageCallback} [callback] - Optional callback. Use instead of Promise return value as desired.
-     * @returns {Promise<Page<Account>>} Requested page of results.
-     */
-    func query(params: JSON) throws -> Page {
-        return try self.client.query(owner: self, path: "/list-accounts", params: params)
     }
 }
 

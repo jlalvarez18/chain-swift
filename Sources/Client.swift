@@ -16,11 +16,11 @@ class Client {
     let connection: Connection
     let signer: HSMSigner
     
-    lazy var mockHsm: MockHSMAPI = {
+    lazy var mockHsm: MockHSM = {
         let url = "\(self.connection.baseUrlString)/mockhsm"
         let connection = Connection(baseUrl: url, token: self.connection.token, agent: self.connection.agent)
         
-        return MockHSMAPI(client: self, signerConnection: connection)
+        return MockHSM(client: self, signerConnection: connection)
     }()
     
     lazy var accessTokens: AccessTokensAPI = {
@@ -37,6 +37,10 @@ class Client {
     
     lazy var assets: AssetsAPI = {
         return AssetsAPI(client: self)
+    }()
+    
+    lazy var balances: BalancesAPI = {
+        return BalancesAPI(client: self)
     }()
     
     init(url: String?, accessToken: String, userAgent: String) {
@@ -82,35 +86,31 @@ class Client {
         return BatchResponse(response: res)
     }
     
-    func query(owner: Queryable, path: String, params: JSON) throws -> Page {
+    func query<T: JSONInitializable>(path: String, nextPath: String? = nil, params: JSON) throws -> Page<T> {
         let response = try self.request(path: path, body: params)
         
         // then create a page object
-        return try Page(data: response.json ?? JSON(), client: self, owner: owner)
+        return try Page<T>(response: response, client: self, path: path, nextPath: nextPath)
     }
     
-    func queryAll(owner: Queryable, params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
-        var nextParams = params
-        
+    func queryAll<T: JSONInitializable>(path: String, nextPath: String? = nil, params: JSON, itemBlock: (T) -> Bool, completion: (Error?) -> Void) throws {
         var shouldContinue = true
         
+        var currentPage: Page<T> = try self.query(path: path, nextPath: nextPath, params: params)
+        
         while shouldContinue {
-            let page = try owner.query(params: nextParams)
-            
-            let items = page.items.array ?? []
-            
-            for item in items {
+            for item in currentPage.items {
                 if itemBlock(item) == false {
                     shouldContinue = false
                     continue
                 }
             }
             
-            if page.lastPage {
+            if currentPage.lastPage {
                 shouldContinue = false
-            } else {
-                nextParams = page.next
             }
+            
+            currentPage = try currentPage.nextPage()
         }
         
         completion(nil)

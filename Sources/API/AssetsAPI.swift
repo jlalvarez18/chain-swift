@@ -87,25 +87,11 @@ class AssetsAPI {
         return try self.client.createBatch(path: "/create-asset", params: params)
     }
     
-    func queryAll(params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
-        return try self.client.queryAll(owner: self, params: params, itemBlock: itemBlock, completion: completion)
+    func query(params: JSON) throws -> Page<Asset> {
+        return try self.client.query(path: "/list-assets", params: params)
     }
-}
-
-extension AssetsAPI: Queryable {
     
-    func query(params: JSON) throws -> Page {
-        return try self.client.query(owner: self, path: "/list-assets", params: params)
+    func queryAll(params: JSON, itemBlock: (Asset) -> Bool, completion: (Error?) -> Void) throws {
+        return try self.client.queryAll(path: "/list-assets", params: params, itemBlock: itemBlock, completion: completion)
     }
 }
-
-
-
-
-
-
-
-
-
-
-

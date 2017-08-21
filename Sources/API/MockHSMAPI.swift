@@ -11,7 +11,7 @@ import JSON
 import HTTP
 import Vapor
 
-struct HSMKey {
+struct HSMKey: JSONInitializable {
     // User specified, unique identifier of the key.
     let alias: String
     
@@ -24,14 +24,26 @@ struct HSMKey {
     }
 }
 
-class MockHSMAPI {
+class MockHSM {
     
     let client: Client
     let signerConnection: Connection
     
+    lazy var keys: MockHSMKeysAPI = {
+        return MockHSMKeysAPI(client: self.client)
+    }()
+    
     init(client: Client, signerConnection: Connection) {
         self.client = client
         self.signerConnection = signerConnection
+    }
+}
+
+class MockHSMKeysAPI {
+    let client: Client
+    
+    init(client: Client) {
+        self.client = client
     }
     
     // Create a new MockHsm key.
@@ -49,13 +61,6 @@ class MockHSMAPI {
         return try HSMKey(json: json)
     }
     
-    func queryAll(params: JSON, itemBlock: (JSON) -> Bool, completion: (Error?) -> Void) throws {
-        return try self.client.queryAll(owner: self, params: params, itemBlock: itemBlock, completion: completion)
-    }
-}
-
-extension MockHSMAPI: Queryable {
-    
     /**
      Get one page of MockHsm keys, optionally filtered to specified aliases.
      
@@ -63,7 +68,7 @@ extension MockHSMAPI: Queryable {
      - parameter aliases: List of requested aliases, max 200.
      - parameter pageSize: Number of items to return in result set.
      */
-    func query(params: JSON) throws -> Page {
+    func query(params: JSON) throws -> Page<HSMKey> {
         var p = params
         
         if let aliases: [String] = try params.get("aliases") {
@@ -71,7 +76,11 @@ extension MockHSMAPI: Queryable {
                 try p.set("pageSize", aliases.count)
             }
         }
-     
-        return try self.client.query(owner: self, path: "/mockhsm/list-keys", params: params)
+        
+        return try self.client.query(path: "/mockhsm/list-keys", params: params)
+    }
+    
+    func queryAll(params: JSON, itemBlock: (HSMKey) -> Bool, completion: (Error?) -> Void) throws {
+        return try self.client.queryAll(path: "/mockhsm/list-keys", params: params, itemBlock: itemBlock, completion: completion)
     }
 }

@@ -193,14 +193,8 @@ class AuthorizationGrantsAPI {
     }
     
     func list() throws -> [AuthorizationGrant] {
-        let page = try self.client.query(owner: self.client.accessTokens, path: "/list-authorization-grants", params: JSON())
+        let page: Page<AuthorizationGrant> = try self.client.query(path: "/list-authorization-grants", nextPath: "/list-access-tokens", params: JSON())
         
-        guard let items = page.items.array else {
-            throw Abort(.badRequest, reason: "Invalid JSON response")
-        }
-        
-        let grants = try items.map { try AuthorizationGrant(json: $0) }
-        
-        return grants
+        return page.items
     }
 }
