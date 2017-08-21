@@ -10,6 +10,7 @@ import Foundation
 import JSON
 import HTTP
 
+//  TODO: add generics to initialize the success items
 class BatchResponse {
     
     let successes: [JSON]

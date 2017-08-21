@@ -31,6 +31,10 @@ class Client {
         return AuthorizationGrantsAPI(client: self)
     }()
     
+    lazy var accounts: AccountsAPI = {
+        return AccountsAPI(client: self)
+    }()
+    
     init(url: String?, accessToken: String, userAgent: String) {
         let baseURLString = url ?? "http://localhost:1999"
         
@@ -59,6 +63,19 @@ class Client {
         }
         
         return try self.request(path: path, body: body)
+    }
+    
+    func createBatch(path: String, params: [JSON]) throws -> BatchResponse {
+        let _params = try params.map { json -> JSON in
+            var newJSON = json
+            try newJSON.set("clientToken", UUID().uuidString)
+            
+            return newJSON
+        }
+        
+        let res = try self.request(path: path, body: JSON(_params))
+        
+        return BatchResponse(response: res)
     }
     
     func query(owner: Queryable, path: String, params: JSON) throws -> Page {

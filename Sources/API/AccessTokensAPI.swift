@@ -13,16 +13,13 @@ struct AccessToken {
     let id: String
     let token: String
     let createdAt: Date
-    let type: String // DEPRECATED. Do not use in 1.2 or later. Either 'client' or 'network'.
     
     init(json: JSON) throws {
         self.id = try json.get("id")
         self.token = try json.get("token")
         
         let createdAtString: String = try json.get("createdAt")
-        
         self.createdAt = Date(rfc3339: createdAtString)!
-        self.type = try json.get("type")
     }
 }
 
