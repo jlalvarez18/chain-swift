@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Vapor
+import HTTP
+import JSON
 
 /**
  * Authorization grants provide a mapping from guard objects (access tokens or X509
@@ -167,7 +168,7 @@ class AuthorizationGrantsAPI {
         let res = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try AccessTokenGuardData(json: json)
@@ -182,7 +183,7 @@ class AuthorizationGrantsAPI {
         let res = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try X509GuardData(json: json)

@@ -9,7 +9,6 @@
 import Foundation
 import HTTP
 import JSON
-import Vapor
 
 let blacklistAttributes = Set([
     "after",
@@ -30,7 +29,7 @@ extension HeaderKey {
 class Connection {
     
     // Chain Core URL
-    let baseUrlString: String
+    let baseUrl: URL
     
     // Chain Core client token for API access.
     let token: String?
@@ -38,21 +37,37 @@ class Connection {
     // https.Agent used to provide TLS config.
     let agent: String?
     
-    var client: ClientFactoryProtocol?
+    let client: FoundationClient
     
-    init(baseUrl: String, token: String?, agent: String?) {
-        self.baseUrlString = baseUrl
+    convenience init(baseUrlString: String, token: String?, agent: String?) throws {
+        guard let url = URL(string: baseUrlString) else {
+            throw ClientError.invalidRequestHost
+        }
+        
+        try self.init(baseURL: url, token: token, agent: agent)
+    }
+    
+    init(baseURL: URL, token: String?, agent: String?) throws {
         self.token = token
         self.agent = agent
+        
+        guard let host = baseURL.host else {
+            throw ClientError.invalidRequestHost
+        }
+        
+        guard let scheme = baseURL.scheme else {
+            throw ClientError.invalidRequestScheme
+        }
+        
+        guard let port = baseURL.port else {
+            throw ClientError.invalidRequestPort
+        }
+        
+        self.baseUrl = baseURL
+        self.client = FoundationClient(scheme: scheme, hostname: host, port: port.port)
     }
     
     func request(path: String, body: JSON = JSON()) throws -> Response {
-        guard let client = self.client else {
-            throw Abort(.badRequest)
-        }
-        
-        let bodyJSON = try snakeize(json: body)
-        
         var headers: [HeaderKey: String] = [
             HeaderKey.accept: "application/json",
             HeaderKey.contentType: "application/json",
@@ -68,13 +83,19 @@ class Connection {
             headers[.userAgent] = agent
         }
         
-        var url = URL(string: self.baseUrlString)!
-        url = url.appendingPathComponent(path)
+        let bodyJSON = try snakeize(json: body)
         
-        let res = try client.post(url.absoluteString, headers, bodyJSON)
+        let url = self.baseUrl.appendingPathComponent(path)
+        
+        let req = Request(method: HTTP.Method.post,
+                          uri: url.makeURI(),
+                          headers: headers,
+                          body: bodyJSON.makeBody())
+        
+        let res = try client.respond(to: req)
         
         guard let _ = res.headers[.chainRequestID] else {
-            throw Abort(.badRequest, reason: "Chain-Request-Id header is missing. There may be an issue with your proxy or network configuration.")
+            throw ChainError(.badRequest, reason: "Chain-Request-Id header is missing. There may be an issue with your proxy or network configuration.")
         }
         
         if res.status == .noContent {
@@ -82,14 +103,14 @@ class Connection {
         }
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "could not parse JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         guard (res.status.statusCode/100) == 2 else {
-            throw Abort(res.status)
+            throw ChainError(res.status)
         }
         
-        return try json.makeResponse()
+        return try Response(status: .ok, json: json)
     }
 }
 

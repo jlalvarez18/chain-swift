@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Vapor
+import HTTP
+import JSON
 
 struct AccessToken: JSONInitializable {
     let id: String
@@ -38,7 +39,7 @@ class AccessTokensAPI {
         let res = try self.client.create(path: "/create-access-token", params: params, skipArray: true)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Missing JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try AccessToken(json: json)

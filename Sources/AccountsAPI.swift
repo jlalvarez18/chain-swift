@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Vapor
+import HTTP
+import JSON
 
 struct Account: JSONInitializable {
     struct Key: JSONInitializable {
@@ -110,7 +111,7 @@ class AccountsAPI {
         let res = try self.client.create(path: "/create-account", params: params)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Missing JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try Account(json: json)
@@ -171,7 +172,7 @@ extension AccountsAPI {
         let res = try self.client.create(path: "/create-account", params: params)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Missing JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try Account(json: json)
@@ -200,7 +201,7 @@ fileprivate extension AccountsAPI {
         let res = try self.client.create(path: "/create-account-receiver", params: params)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Missing JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try Receiver(json: json)

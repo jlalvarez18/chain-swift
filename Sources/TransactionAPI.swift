@@ -8,7 +8,7 @@
 
 import Foundation
 import JSON
-import Vapor
+import HTTP
 
 struct Transaction: JSONInitializable {
     let id: String
@@ -134,7 +134,7 @@ class TransactionAPI {
         let res = try self.client.request(path: "/build-transaction", body: [builder.makeJSON()])
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON Response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         try checkForError(json: json)
@@ -167,7 +167,7 @@ class TransactionAPI {
         let res = try self.client.request(path: "/submit-transaction", body: body)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON Response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         try checkForError(json: json)
@@ -214,7 +214,7 @@ fileprivate extension TransactionAPI {
         let code: String? = try first.get("code")
         
         if let _ = code {
-            throw Abort(.badRequest, reason: first.wrapped.description)
+            throw ChainError(.badRequest, reason: first.wrapped.description)
         }
     }
     

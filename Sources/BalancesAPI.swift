@@ -8,7 +8,7 @@
 
 import Foundation
 import JSON
-import Vapor
+import HTTP
 
 struct Balance: JSONInitializable {
     let amount: Int

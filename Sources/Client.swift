@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Vapor
+import HTTP
+import JSON
 
 class Client {
     
@@ -41,8 +42,8 @@ class Client {
     }()
     
     lazy var mockHsm: MockHSM = {
-        let url = "\(self.connection.baseUrlString)/mockhsm"
-        let connection = Connection(baseUrl: url, token: self.connection.token, agent: self.connection.agent)
+        let url = self.connection.baseUrl.appendingPathComponent("/mockhsm")
+        let connection = try! Connection(baseURL: url, token: self.connection.token, agent: self.connection.agent)
         
         return MockHSM(client: self, signerConnection: connection)
     }()
@@ -51,19 +52,11 @@ class Client {
         return TransactionAPI(client: self)
     }()
     
-    init(url: String?, accessToken: String, userAgent: String) {
+    init(url: String?, accessToken: String, userAgent: String) throws {
         let baseURLString = url ?? "http://localhost:1999"
         
-        self.connection = Connection(baseUrl: baseURLString, token: accessToken, agent: userAgent)
+        self.connection = try Connection(baseUrlString: baseURLString, token: accessToken, agent: userAgent)
         self.signer = HSMSigner()
-    }
-    
-    required convenience init(config: Config) throws {
-        let token: String = try config.get("accessToken")
-        let url: String? = try config.get("url")
-        let agent: String = try config.get("agent")
-        
-        self.init(url: url, accessToken: token, userAgent: agent)
     }
     
     func request(path: String, body: JSON) throws -> Response {
@@ -122,20 +115,5 @@ class Client {
         }
         
         completion(nil)
-    }
-}
-
-extension Client: Provider {
-
-    func boot(_ config: Config) throws {
-        
-    }
-    
-    func boot(_ droplet: Droplet) throws {
-        self.connection.client = droplet.client
-    }
-    
-    func beforeRun(_ droplet: Droplet) throws {
-        
     }
 }

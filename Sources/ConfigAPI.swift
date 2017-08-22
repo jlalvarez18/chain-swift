@@ -8,7 +8,7 @@
 
 import Foundation
 import JSON
-import Vapor
+import HTTP
 
 struct CoreInfo: JSONInitializable {
     struct Snapshot: JSONInitializable {
@@ -136,7 +136,7 @@ class ConfigAPI {
         let res = try self.client.request(path: "/info", body: JSON())
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON Response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try CoreInfo(json: json)

@@ -9,7 +9,6 @@
 import Foundation
 import JSON
 import HTTP
-import Vapor
 
 struct HSMKey: JSONInitializable {
     // User specified, unique identifier of the key.
@@ -55,7 +54,7 @@ class MockHSMKeysAPI {
         let res = try self.client.request(path: "/mockhsm/create-key", body: body)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Missing JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try HSMKey(json: json)

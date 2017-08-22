@@ -30,7 +30,7 @@ class HSMSigner {
     
     func addKey(key: String, connection: Connection) {
         let token = connection.token ?? "noauth"
-        let id = "\(connection.baseUrlString)-\(token)"
+        let id = "\(connection.baseUrl.absoluteString)-\(token)"
         
         let signer: Signer
         

@@ -9,7 +9,6 @@
 import Foundation
 import JSON
 import HTTP
-import Vapor
 
 class Page<T: JSONInitializable> {
     
@@ -40,7 +39,7 @@ class Page<T: JSONInitializable> {
     
     convenience init(response: Response, client: Client, path: String, nextPath: String? = nil) throws {
         guard let json = response.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON Response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         try self.init(data: json, client: client, path: path, nextPath: nextPath)

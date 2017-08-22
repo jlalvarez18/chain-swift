@@ -8,7 +8,7 @@
 
 import Foundation
 import JSON
-import Vapor
+import HTTP
 
 struct Asset: JSONInitializable {
     struct Key: JSONInitializable {
@@ -77,7 +77,7 @@ class AssetsAPI {
         let res = try self.client.create(path: "/create-asset", params: params)
         
         guard let json = res.json else {
-            throw Abort(.badRequest, reason: "Invalid JSON response")
+            throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
         return try Asset(json: json)
