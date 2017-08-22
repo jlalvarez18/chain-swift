@@ -52,6 +52,10 @@ class Client {
         return TransactionAPI(client: self)
     }()
     
+    lazy var unspentOutputs: UnspentOutputAPI = {
+        return UnspentOutputAPI(client: self)
+    }()
+    
     init(url: String?, accessToken: String, userAgent: String) throws {
         let baseURLString = url ?? "http://localhost:1999"
         
@@ -87,14 +91,14 @@ class Client {
         return BatchResponse(response: res)
     }
     
-    func query<T: JSONInitializable>(path: String, nextPath: String? = nil, params: JSON) throws -> Page<T> {
+    func query<T: NodeInitializable>(path: String, nextPath: String? = nil, params: JSON) throws -> Page<T> {
         let response = try self.request(path: path, body: params)
         
         // then create a page object
         return try Page<T>(response: response, client: self, path: path, nextPath: nextPath)
     }
     
-    func queryAll<T: JSONInitializable>(path: String, nextPath: String? = nil, params: JSON, itemBlock: (T) -> Bool, completion: (Error?) -> Void) throws {
+    func queryAll<T: NodeInitializable>(path: String, nextPath: String? = nil, params: JSON, itemBlock: (T) -> Bool, completion: (Error?) -> Void) throws {
         var shouldContinue = true
         
         var currentPage: Page<T> = try self.query(path: path, nextPath: nextPath, params: params)

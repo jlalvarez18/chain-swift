@@ -10,16 +10,16 @@ import Foundation
 import HTTP
 import JSON
 
-struct Account: JSONInitializable {
-    struct Key: JSONInitializable {
+struct Account: NodeInitializable {
+    struct Key: NodeInitializable {
         let rootXpub: String
         let accountXpub: String
         let assetDerivationPath: JSON
         
-        init(json: JSON) throws {
-            self.rootXpub = try json.get("root_xpub")
-            self.accountXpub = try json.get("account_xpub")
-            self.assetDerivationPath = try json.get("asset_derivation_path")
+        init(node: Node) throws {
+            self.rootXpub = try node.get("root_xpub")
+            self.accountXpub = try node.get("account_xpub")
+            self.assetDerivationPath = try node.get("asset_derivation_path")
         }
     }
     
@@ -29,17 +29,12 @@ struct Account: JSONInitializable {
     let tags: JSON
     let keys: [Key]
     
-    init(json: JSON) throws {
-        self.id = try json.get("id")
-        self.alias = try json.get("alias")
-        self.quorum = try json.get("quorum")
-        self.tags = try json.get("tags")
-        
-        let _keys: JSON = try json.get("keys")
-        
-        let keyItems = _keys.array ?? []
-        
-        self.keys = try keyItems.map { try Key(json: $0) }
+    init(node: Node) throws {
+        self.id = try node.get("id")
+        self.alias = try node.get("alias")
+        self.quorum = try node.get("quorum")
+        self.tags = try node.get("tags")
+        self.keys = try node.get("keys")
     }
 }
 
@@ -114,7 +109,7 @@ class AccountsAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try Account(json: json)
+        return try Account(node: json)
     }
     
     func createBatch(requests: [AccountCreationRequest]) throws -> BatchResponse {
@@ -175,7 +170,7 @@ extension AccountsAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try Account(json: json)
+        return try Account(node: json)
     }
     
     func createReceiver(accountId: String, expiresAt: Date) throws -> Receiver {

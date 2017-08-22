@@ -10,16 +10,16 @@ import Foundation
 import JSON
 import HTTP
 
-struct Asset: JSONInitializable {
-    struct Key: JSONInitializable {
+struct Asset: NodeInitializable {
+    struct Key: NodeInitializable {
         let assetPubKey: String
         let rootXpub: String
         let assetDerivationPath: JSON
         
-        init(json: JSON) throws {
-            self.assetPubKey = try json.get("asset_pubkey")
-            self.rootXpub = try json.get("root_xpub")
-            self.assetDerivationPath = try json.get("asset_derivation_path")
+        init(node: Node) throws {
+            self.assetPubKey = try node.get("asset_pubkey")
+            self.rootXpub = try node.get("root_xpub")
+            self.assetDerivationPath = try node.get("asset_derivation_path")
         }
     }
     
@@ -32,15 +32,15 @@ struct Asset: JSONInitializable {
     let tags: JSON
     let isLocal: Bool
     
-    init(json: JSON) throws {
-        self.id = try json.get("id")
-        self.alias = try json.get("alias")
-        self.issuanceProgram = try json.get("issuance_program")
-        self.keys = try json.get("keys")
-        self.quorum = try json.get("quorum")
-        self.defintion = try json.get("defintion")
-        self.tags = try json.get("tags")
-        self.isLocal = try json.get("is_local")
+    init(node: Node) throws {
+        self.id = try node.get("id")
+        self.alias = try node.get("alias")
+        self.issuanceProgram = try node.get("issuance_program")
+        self.keys = try node.get("keys")
+        self.quorum = try node.get("quorum")
+        self.defintion = try node.get("defintion")
+        self.tags = try node.get("tags")
+        self.isLocal = try node.get("is_local")
     }
 }
 
@@ -80,7 +80,7 @@ class AssetsAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try Asset(json: json)
+        return try Asset(node: json)
     }
     
     func createBatch(requests: [AssetCreationRequest]) throws -> BatchResponse {

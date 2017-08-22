@@ -10,16 +10,16 @@ import Foundation
 import HTTP
 import JSON
 
-struct AccessToken: JSONInitializable {
+struct AccessToken: NodeInitializable {
     let id: String
     let token: String
     let createdAt: Date
     
-    init(json: JSON) throws {
-        self.id = try json.get("id")
-        self.token = try json.get("token")
+    init(node: Node) throws {
+        self.id = try node.get("id")
+        self.token = try node.get("token")
         
-        let createdAtString: String = try json.get("created_at")
+        let createdAtString: String = try node.get("created_at")
         self.createdAt = Date(rfc3339: createdAtString)!
     }
 }
@@ -42,7 +42,7 @@ class AccessTokensAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try AccessToken(json: json)
+        return try AccessToken(node: json)
     }
     
     func query(params: JSON) throws -> Page<AccessToken> {

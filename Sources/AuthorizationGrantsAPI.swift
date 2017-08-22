@@ -36,7 +36,7 @@ enum AuthGuardType: String {
     case x509 = "x509"
 }
 
-struct AuthorizationGrant: JSONInitializable {
+struct AuthorizationGrant: NodeInitializable {
     enum DataType {
         case accessToken(AccessTokenGuardData)
         case X509Data(X509GuardData)
@@ -48,28 +48,28 @@ struct AuthorizationGrant: JSONInitializable {
     let createdAt: Date
     let guardData: DataType
     
-    init(json: JSON) throws {
-        let type: String = try json.get("guard_type")
+    init(node: Node) throws {
+        let type: String = try node.get("guard_type")
         self.guardType = AuthGuardType(rawValue: type)!
         
-        let policyType: String = try json.get("policy")
+        let policyType: String = try node.get("policy")
         self.policy = AuthGuardPolicy(rawValue: policyType)!
         
-        let dateString: String = try json.get("created_at")
+        let dateString: String = try node.get("created_at")
         self.createdAt = Date(rfc3339: dateString)!
         
-        self.protected = try json.get("protected")
+        self.protected = try node.get("protected")
         
         switch self.guardType {
         case .accessToken:
-            let tokenJSON: JSON = try json.get("guard_data")
-            let token = try AccessTokenGuardData(json: tokenJSON)
+            let tokenJSON: JSON = try node.get("guard_data")
+            let token = try AccessTokenGuardData(node: tokenJSON)
             
             self.guardData = DataType.accessToken(token)
         
         case .x509:
-            let certJSON: JSON = try json.get("guard_data")
-            let data = try X509GuardData(json: certJSON)
+            let certJSON: JSON = try node.get("guard_data")
+            let data = try X509GuardData(node: certJSON)
             
             self.guardData = DataType.X509Data(data)
         }
@@ -83,8 +83,8 @@ struct AuthorizationGrant: JSONInitializable {
  * sub-attribute values specified in the guard, the guard will produce a
  * positive match.
  */
-struct X509GuardData: JSONInitializable {
-    struct Subject: JSONConvertible {
+struct X509GuardData: NodeInitializable {
+    struct Subject: NodeConvertible {
         let c: [String]? // Country attribute
         let o: [String]? // Organization attribute
         let ou: [String]? // Organizational Unit attribute
@@ -96,32 +96,32 @@ struct X509GuardData: JSONInitializable {
         let serialNumber: String? // Serial Number attribute
         let cn: String? // Common Name attribute
         
-        init(json: JSON) throws {
-            self.c = try json.get("c")
-            self.o = try json.get("o")
-            self.ou = try json.get("ou")
-            self.l = try json.get("l")
-            self.st = try json.get("st")
-            self.street = try json.get("street")
-            self.postalCode = try json.get("postalCode")
-            self.serialNumber = try json.get("serialNumber")
-            self.cn = try json.get("cn")
+        init(node: Node) throws {
+            self.c = try node.get("c")
+            self.o = try node.get("o")
+            self.ou = try node.get("ou")
+            self.l = try node.get("l")
+            self.st = try node.get("st")
+            self.street = try node.get("street")
+            self.postalCode = try node.get("postalCode")
+            self.serialNumber = try node.get("serialNumber")
+            self.cn = try node.get("cn")
         }
         
-        func makeJSON() throws -> JSON {
-            var json = JSON()
+        func makeNode(in context: Context?) throws -> Node {
+            var node = Node(context)
             
-            try json.set("c", self.c)
-            try json.set("o", self.o)
-            try json.set("ou", self.ou)
-            try json.set("l", self.l)
-            try json.set("st", self.st)
-            try json.set("street", self.street)
-            try json.set("postalCode", self.postalCode)
-            try json.set("serialNumber", self.serialNumber)
-            try json.set("cn", self.cn)
+            try node.set("c", self.c)
+            try node.set("o", self.o)
+            try node.set("ou", self.ou)
+            try node.set("l", self.l)
+            try node.set("st", self.st)
+            try node.set("street", self.street)
+            try node.set("postalCode", self.postalCode)
+            try node.set("serialNumber", self.serialNumber)
+            try node.set("cn", self.cn)
             
-            return json
+            return node
         }
     }
     
@@ -130,24 +130,24 @@ struct X509GuardData: JSONInitializable {
     let protected: Bool
     let createdAt: Date
     
-    init(json: JSON) throws {
-        self.subject = try json.get("subject")
+    init(node: Node) throws {
+        self.subject = try node.get("subject")
         
-        let policyString: String = try json.get("policy")
+        let policyString: String = try node.get("policy")
         self.policy = AuthGuardPolicy(rawValue: policyString)!
         
-        let dateString: String = try json.get("createdAt")
+        let dateString: String = try node.get("createdAt")
         self.createdAt = Date(rfc3339: dateString)!
         
-        self.protected = try json.get("protected")
+        self.protected = try node.get("protected")
     }
 }
 
-struct AccessTokenGuardData {
+struct AccessTokenGuardData: NodeInitializable {
     let id: String
     
-    init(json: JSON) throws {
-        self.id = try json.get("id")
+    init(node: Node) throws {
+        self.id = try node.get("id")
     }
 }
 
@@ -171,13 +171,13 @@ class AuthorizationGrantsAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try AccessTokenGuardData(json: json)
+        return try AccessTokenGuardData(node: json)
     }
     
     func create(with subject: X509GuardData.Subject, policy: AuthGuardPolicy) throws -> X509GuardData {
         var params = JSON()
         try params.set("guardType", AuthGuardType.x509.rawValue)
-        try params.set("guardData.subject", try subject.makeJSON())
+        try params.set("guardData.subject", try subject.makeNode(in: nil))
         try params.set("policy", policy.rawValue)
         
         let res = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
@@ -186,7 +186,7 @@ class AuthorizationGrantsAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try X509GuardData(json: json)
+        return try X509GuardData(node: json)
     }
     
     func delete(params: JSON) throws -> Response {

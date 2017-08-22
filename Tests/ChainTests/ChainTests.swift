@@ -2,35 +2,27 @@ import XCTest
 import JSON
 @testable import Chain_Swift
 
-extension StructuredDataWrapper {
-    
-    public func getObject<T: JSONInitializable>(_ indexers: PathIndexer...) throws -> T {
-        return try getObject(path: indexers)
-    }
-    
-    public func getObject<T: JSONInitializable>(path indexers: [PathIndexer]) throws -> T {
-        let value = self[indexers] ?? .null
-        return try T(json: JSON(value))
-    }
-}
-
 class ChainTests: XCTestCase {
     
-    struct Person: JSONInitializable {
+    struct Person: NodeInitializable {
         let name: String
         let address: Address
+        let object: JSON
+        let multiAddresses: [Address]
         
-        init(json: JSON) throws {
-            self.name = try json.get("name")
-            self.address = try json.get("address", transform: { try Address(json: $0) })
+        init(node: Node) throws {
+            self.name = try node.get("name")
+            self.address = try node.get("address")
+            self.object = try node.get("object")
+            self.multiAddresses = try node.get("multiAddresses")
         }
     }
     
-    struct Address: JSONInitializable {
+    struct Address: NodeInitializable {
         let street: String
         
-        init(json: JSON) throws {
-            self.street = try json.get("street")
+        init(node: Node) throws {
+            self.street = try node.get("street")
         }
     }
     
@@ -39,11 +31,15 @@ class ChainTests: XCTestCase {
             var json = JSON()
             try json.set("name", "Juan Alvarez")
             try json.set("address", ["street": "2014 Plantation Dr"])
+            try json.set("object", JSON())
+            try json.set("multiAddresses", [["street": "2014 Plantation Dr"], ["street": "2016 Plantation Dr"]])
             
-            let person = try Person(json: json)
+            let person = try Person(node: json)
             
             XCTAssertEqual(person.name, "Juan Alvarez")
             XCTAssertEqual(person.address.street, "2014 Plantation Dr")
+            XCTAssertNotNil(person.object)
+            XCTAssertNotNil(person.multiAddresses)
         } catch {
             XCTFail(error.localizedDescription)
         }

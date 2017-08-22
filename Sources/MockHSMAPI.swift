@@ -10,16 +10,16 @@ import Foundation
 import JSON
 import HTTP
 
-struct HSMKey: JSONInitializable {
+struct HSMKey: NodeInitializable {
     // User specified, unique identifier of the key.
     let alias: String
     
     // Hex-encoded string representation of the key.
     let xpub: String
     
-    init(json: JSON) throws {
-        self.alias = try json.get("alias")
-        self.xpub = try json.get("xpub")
+    init(node: Node) throws {
+        self.alias = try node.get("alias")
+        self.xpub = try node.get("xpub")
     }
 }
 
@@ -57,7 +57,7 @@ class MockHSMKeysAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try HSMKey(json: json)
+        return try HSMKey(node: json)
     }
     
     /**

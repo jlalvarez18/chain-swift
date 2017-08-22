@@ -10,7 +10,7 @@ import Foundation
 import JSON
 import HTTP
 
-struct Transaction: JSONInitializable {
+struct Transaction: NodeInitializable {
     let id: String
     let timestamp: Date
     let blockId: String
@@ -22,23 +22,23 @@ struct Transaction: JSONInitializable {
     let inputs: [TransactionInput]
     let outputs: [TransactionOutput]
     
-    init(json: JSON) throws {
-        self.id = try json.get("id")
+    init(node: Node) throws {
+        self.id = try node.get("id")
         self.timestamp = try {
-            let string: String = try json.get("timestamp")
+            let string: String = try node.get("timestamp")
             return Date(rfc3339: string)!
         }()
-        self.blockId = try json.get("block_id")
-        self.blockHeight = try json.get("block_height")
-        self.position = try json.get("position")
-        self.referenceData = try json.get("reference_data")
-        self.isLocal = try json.get("is_local")
-        self.inputs = try json.get("inputs")
-        self.outputs = try json.get("outputs")
+        self.blockId = try node.get("block_id")
+        self.blockHeight = try node.get("block_height")
+        self.position = try node.get("position")
+        self.referenceData = try node.get("reference_data")
+        self.isLocal = try node.get("is_local")
+        self.inputs = try node.get("inputs")
+        self.outputs = try node.get("outputs")
     }
 }
 
-struct TransactionInput: JSONInitializable {
+struct TransactionInput: NodeInitializable {
     let type: String
     
     let assetId: String
@@ -59,25 +59,25 @@ struct TransactionInput: JSONInitializable {
     
     let isLocal: Bool
     
-    init(json: JSON) throws {
-        self.type = try json.get("type")
-        self.assetId = try json.get("asset_id")
-        self.assetAlias = try json.get("asset_alias")
-        self.assetDefinition = try json.get("asset_definition")
-        self.assetTags = try json.get("asset_tags")
-        self.assetIsLocal = try json.get("asset_is_local")
-        self.amount = try json.get("amount")
-        self.spentOutputId = try json.get("spent_output_id")
-        self.accountId = try json.get("account_id")
-        self.accountAlias = try json.get("account_alias")
-        self.accountTags = try json.get("account_tags")
-        self.issuanceProgram = try json.get("issuance_program")
-        self.referenceData = try json.get("reference_data")
-        self.isLocal = try json.get("is_local")
+    init(node: Node) throws {
+        self.type = try node.get("type")
+        self.assetId = try node.get("asset_id")
+        self.assetAlias = try node.get("asset_alias")
+        self.assetDefinition = try node.get("asset_definition")
+        self.assetTags = try node.get("asset_tags")
+        self.assetIsLocal = try node.get("asset_is_local")
+        self.amount = try node.get("amount")
+        self.spentOutputId = try node.get("spent_output_id")
+        self.accountId = try node.get("account_id")
+        self.accountAlias = try node.get("account_alias")
+        self.accountTags = try node.get("account_tags")
+        self.issuanceProgram = try node.get("issuance_program")
+        self.referenceData = try node.get("reference_data")
+        self.isLocal = try node.get("is_local")
     }
 }
 
-struct TransactionOutput: JSONInitializable {
+struct TransactionOutput: NodeInitializable {
     let id: String
     let type: String // The type of the output. Possible values are "control" and "retire".
     let purpose: String // The purpose of the output. Possible values are "receive" and "change".
@@ -100,23 +100,23 @@ struct TransactionOutput: JSONInitializable {
     
     let isLocal: Bool
     
-    init(json: JSON) throws {
-        self.id = try json.get("id")
-        self.type = try json.get("type")
-        self.purpose = try json.get("purpose")
-        self.position = try json.get("position")
-        self.assetId = try json.get("asset_id")
-        self.assetAlias = try json.get("asset_alias")
-        self.assetDefinition = try json.get("asset_definition")
-        self.assetTags = try json.get("asset_tags")
-        self.assetIsLocal = try json.get("asset_is_local")
-        self.amount = try json.get("amount")
-        self.accountId = try json.get("account_id")
-        self.accountAlias = try json.get("account_alias")
-        self.accountTags = try json.get("account_tags")
-        self.controlProgram = try json.get("control_program")
-        self.referenceData = try json.get("reference_data")
-        self.isLocal = try json.get("is_local")
+    init(node: Node) throws {
+        self.id = try node.get("id")
+        self.type = try node.get("type")
+        self.purpose = try node.get("purpose")
+        self.position = try node.get("position")
+        self.assetId = try node.get("asset_id")
+        self.assetAlias = try node.get("asset_alias")
+        self.assetDefinition = try node.get("asset_definition")
+        self.assetTags = try node.get("asset_tags")
+        self.assetIsLocal = try node.get("asset_is_local")
+        self.amount = try node.get("amount")
+        self.accountId = try node.get("account_id")
+        self.accountAlias = try node.get("account_alias")
+        self.accountTags = try node.get("account_tags")
+        self.controlProgram = try node.get("control_program")
+        self.referenceData = try node.get("reference_data")
+        self.isLocal = try node.get("is_local")
     }
 }
 
@@ -228,23 +228,3 @@ fileprivate extension TransactionAPI {
         return BatchResponse(responses: templates)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

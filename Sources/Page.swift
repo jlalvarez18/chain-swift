@@ -10,7 +10,7 @@ import Foundation
 import JSON
 import HTTP
 
-class Page<T: JSONInitializable> {
+class Page<T: NodeInitializable> {
     
     let data: JSON
     let items: [T]
@@ -28,8 +28,6 @@ class Page<T: JSONInitializable> {
         self.client = client
         
         self.next = try data.get("next")
-        
-        // TODO: is this magical or do I need to do the work???
         self.items = try data.get("items")
         
         let _pastPage: Bool? = try data.get("lastPage")

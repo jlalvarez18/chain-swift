@@ -10,34 +10,34 @@ import Foundation
 import JSON
 import HTTP
 
-struct CoreInfo: JSONInitializable {
-    struct Snapshot: JSONInitializable {
+struct CoreInfo: NodeInitializable {
+    struct Snapshot: NodeInitializable {
         let attempt: Int
         let height: Int
         let size: Int
         let downloaded: Int
         let inProgress: Bool
         
-        init(json: JSON) throws {
-            self.attempt = try json.get("attempt")
-            self.height = try json.get("height")
-            self.size = try json.get("size")
-            self.downloaded = try json.get("downloaded")
-            self.inProgress = try json.get("inProgress")
+        init(node: Node) throws {
+            self.attempt = try node.get("attempt")
+            self.height = try node.get("height")
+            self.size = try node.get("size")
+            self.downloaded = try node.get("downloaded")
+            self.inProgress = try node.get("in_progress")
         }
     }
     
-    struct BuildConfig: JSONInitializable {
+    struct BuildConfig: NodeInitializable {
         let isLocalhostAuth: Bool
         let isMockHsm: Bool
         let isReset: Bool
         let isPlainHttp: Bool
         
-        init(json: JSON) throws {
-            self.isLocalhostAuth = try json.get("is_localhost_auth")
-            self.isMockHsm = try json.get("is_mockHsm")
-            self.isReset = try json.get("is_reset")
-            self.isPlainHttp = try json.get("is_plain_http")
+        init(node: Node) throws {
+            self.isLocalhostAuth = try node.get("is_localhost_auth")
+            self.isMockHsm = try node.get("is_mockHsm")
+            self.isReset = try node.get("is_reset")
+            self.isPlainHttp = try node.get("is_plain_http")
         }
     }
     
@@ -69,41 +69,41 @@ struct CoreInfo: JSONInitializable {
     
     let health: JSON
     
-    init(json: JSON) throws {
-        self.snapshot = try json.get("snapshot")
-        self.isConfigured = try json.get("isConfigured")
+    init(node: Node) throws {
+        self.snapshot = try node.get("snapshot")
+        self.isConfigured = try node.get("is_configured")
         
         self.configuredAt = try {
-            let string: String = try json.get("configuredAt")
+            let string: String = try node.get("configured_at")
             return Date(rfc3339: string)!
         }()
         
-        self.isSigner = try json.get("isSigner")
-        self.isGenerator = try json.get("isGenerator")
+        self.isSigner = try node.get("is_signer")
+        self.isGenerator = try node.get("is_generator")
         
-        self.generatorUrl = try json.get("generatorUrl")
-        self.generatorAccessToken = try json.get("generatorAccessToken")
+        self.generatorUrl = try node.get("generator_url")
+        self.generatorAccessToken = try node.get("generator_access_token")
         
-        self.blockchainId = try json.get("blockchainId")
-        self.blockHeight = try json.get("blockHeight")
+        self.blockchainId = try node.get("blockchain_id")
+        self.blockHeight = try node.get("block_height")
         
-        self.generatorBlockHeight = try json.get("generatorBlockHeight")
+        self.generatorBlockHeight = try node.get("generator_block_height")
         self.generatorBlockHeightFetchedAt = try {
-            let string: String = try json.get("generatorBlockHeightFetchedAt")
+            let string: String = try node.get("generator_blockHeight_fetchedAt")
             return Date(rfc3339: string)!
         }()
         
-        self.isProduction = try json.get("isProduction")
-        self.crosscoreRpcVersion = try json.get("crosscoreRpcVersion")
+        self.isProduction = try node.get("is_production")
+        self.crosscoreRpcVersion = try node.get("crosscore_rpc_version")
         
-        self.coreId = try json.get("coreId")
-        self.version = try json.get("version")
+        self.coreId = try node.get("core_id")
+        self.version = try node.get("version")
         
-        self.buildCommit = try json.get("buildCommit")
-        self.buildDate = try json.get("buildDate")
-        self.buildConfig = try json.get("buildConfig")
+        self.buildCommit = try node.get("build_commit")
+        self.buildDate = try node.get("build_date")
+        self.buildConfig = try node.get("build_config")
         
-        self.health = try json.get("health")
+        self.health = try node.get("health")
     }
 }
 
@@ -139,6 +139,6 @@ class ConfigAPI {
             throw ChainError(.badRequest, reason: "Missing JSON response")
         }
         
-        return try CoreInfo(json: json)
+        return try CoreInfo(node: json)
     }
 }

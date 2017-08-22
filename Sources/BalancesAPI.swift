@@ -10,13 +10,13 @@ import Foundation
 import JSON
 import HTTP
 
-struct Balance: JSONInitializable {
+struct Balance: NodeInitializable {
     let amount: Int
     let sumBy: JSON
     
-    init(json: JSON) throws {
-        self.amount = try json.get("amount")
-        self.sumBy = try json.get("sumBy")
+    init(node: Node) throws {
+        self.amount = try node.get("amount")
+        self.sumBy = try node.get("sumBy")
     }
 }
 
