@@ -36,11 +36,7 @@ class AccessTokensAPI {
         var params = JSON()
         try params.set("id", id)
         
-        let res = try self.client.create(path: "/create-access-token", params: params, skipArray: true)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-access-token", params: params, skipArray: true)
         
         return try AccessToken(node: json)
     }

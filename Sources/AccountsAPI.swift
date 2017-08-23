@@ -103,11 +103,7 @@ class AccountsAPI {
     func create(request: AccountCreationRequest) throws -> Account {
         let params = try request.params()
         
-        let res = try self.client.create(path: "/create-account", params: params)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-account", params: params)
         
         return try Account(node: json)
     }
@@ -164,11 +160,7 @@ extension AccountsAPI {
         try params.set("quorum", quorum)
         try params.set("tags", tags)
         
-        let res = try self.client.create(path: "/create-account", params: params)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-account", params: params)
         
         return try Account(node: json)
     }
@@ -193,11 +185,7 @@ extension AccountsAPI {
 fileprivate extension AccountsAPI {
     
     func createReceiver(with params: JSON) throws -> Receiver {
-        let res = try self.client.create(path: "/create-account-receiver", params: params)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-account-receiver", params: params)
         
         return try Receiver(json: json)
     }

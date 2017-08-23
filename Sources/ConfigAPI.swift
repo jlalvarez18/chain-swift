@@ -136,7 +136,7 @@ class ConfigAPI {
         let res = try self.client.request(path: "/info", body: JSON())
         
         guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
+            throw try APIError.createJSONError(response: res)
         }
         
         return try CoreInfo(node: json)

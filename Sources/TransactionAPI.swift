@@ -134,7 +134,7 @@ class TransactionAPI {
         let res = try self.client.request(path: "/build-transaction", body: [builder.makeJSON()])
         
         guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
+            throw try APIError.createJSONError(response: res)
         }
         
         try checkForError(json: json)
@@ -167,7 +167,7 @@ class TransactionAPI {
         let res = try self.client.request(path: "/submit-transaction", body: body)
         
         guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
+            throw try APIError.createJSONError(response: res)
         }
         
         try checkForError(json: json)
@@ -196,25 +196,19 @@ class TransactionAPI {
 fileprivate extension TransactionAPI {
     
     func checkForError(json: JSON) throws {
-        /*
-        if ('code' in resp) {
-            throw errors.create(
-                errors.types.BAD_REQUEST,
-                errors.formatErrMsg(resp, ''),
-                {body: resp}
-            )
-        }
-        return resp
-        */
-        
-        guard let first = json.array?.first else {
+        guard let resp = json.array?.first else {
             return
         }
         
-        let code: String? = try first.get("code")
+        let code: String? = try resp.get("code")
         
         if let _ = code {
-            throw ChainError(.badRequest, reason: first.wrapped.description)
+            let msg = try APIError.formatErrorMessage(body: resp.makeNode(in: nil), requestId: nil)
+            
+            var props = Node(nil)
+            try! props.set("body", json)
+            
+            throw try APIError.create(type: .badRequest, message: msg, props: props)
         }
     }
     

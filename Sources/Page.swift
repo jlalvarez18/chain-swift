@@ -37,7 +37,7 @@ class Page<T: NodeInitializable> {
     
     convenience init(response: Response, client: Client, path: String, nextPath: String? = nil) throws {
         guard let json = response.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
+            throw try APIError.createJSONError(response: response)
         }
         
         try self.init(data: json, client: client, path: path, nextPath: nextPath)

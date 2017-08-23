@@ -54,7 +54,7 @@ class MockHSMKeysAPI {
         let res = try self.client.request(path: "/mockhsm/create-key", body: body)
         
         guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
+            throw try APIError.createJSONError(response: res)
         }
         
         return try HSMKey(node: json)

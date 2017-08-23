@@ -67,7 +67,7 @@ class Client {
         return try self.connection.request(path: path, body: body)
     }
     
-    func create(path: String, params: JSON, skipArray: Bool = false) throws -> Response {
+    func create(path: String, params: JSON, skipArray: Bool = false) throws -> JSON {
         var body = params
         try body.set("clientToken", UUID().uuidString)
         
@@ -75,7 +75,21 @@ class Client {
             body = [body]
         }
         
-        return try self.request(path: path, body: body)
+        let res = try self.request(path: path, body: body)
+        
+        guard let json = res.json else {
+            throw try APIError.createJSONError(response: res)
+        }
+        
+        if let item = json.array?.first {
+            if try APIError.isBatchError(body: item) {
+                throw try APIError.createBatchError(type: .serverError, body: item.makeNode(in: nil))
+            }
+            
+            return item
+        }
+        
+        return json
     }
     
     func createBatch(path: String, params: [JSON]) throws -> BatchResponse {

@@ -74,11 +74,7 @@ class AssetsAPI {
     
     func create(request: AssetCreationRequest) throws -> Asset {
         let params = try request.params()
-        let res = try self.client.create(path: "/create-asset", params: params)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-asset", params: params)
         
         return try Asset(node: json)
     }

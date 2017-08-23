@@ -92,10 +92,30 @@ class Connection {
                           headers: headers,
                           body: bodyJSON.makeBody())
         
-        let res = try client.respond(to: req)
+        let res: Response
         
-        guard let _ = res.headers[.chainRequestID] else {
-            throw ChainError(.badRequest, reason: "Chain-Request-Id header is missing. There may be an issue with your proxy or network configuration.")
+        do {
+            res = try client.respond(to: req)
+        } catch {
+            var props = Node(nil)
+            try! props.set("sourceError", error)
+            
+            let msg = "Fetch error: \(error.localizedDescription)"
+            
+            let _error = try! APIError.create(type: .fetch, message: msg, props: props)
+            
+            throw _error
+        }
+        
+        guard let requestId = res.headers[.chainRequestID] else {
+            var props = Node(nil)
+            try props.set("response", res)
+            try props.set("status", res.status.statusCode)
+            
+            let msg = "Chain-Request-Id header is missing. There may be an issue with your proxy or network configuration."
+            let _error = try! APIError.create(type: .noRequestId, message: msg, props: props)
+            
+            throw _error
         }
         
         if res.status == .noContent {
@@ -103,11 +123,22 @@ class Connection {
         }
         
         guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
+            throw try APIError.createJSONError(response: res)
         }
         
         guard (res.status.statusCode/100) == 2 else {
-            throw ChainError(res.status)
+            let type = APIError.ErrorType.getType(response: res)
+            let msg = try! APIError.formatErrorMessage(body: json.makeNode(in: nil), requestId: requestId)
+            
+            var props = Node(nil)
+            try! props.set("response", res)
+            try! props.set("status", res.status.statusCode)
+            try! props.set("body", json)
+            try! props.set("requestId", requestId)
+            
+            let _error = try! APIError.create(type: type, message: msg, props: props)
+            
+            throw _error
         }
         
         return try Response(status: .ok, json: json)

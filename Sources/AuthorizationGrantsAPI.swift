@@ -165,11 +165,7 @@ class AuthorizationGrantsAPI {
         try params.set("guardData", ["id": token.id])
         try params.set("policy", policy.rawValue)
         
-        let res = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
         
         return try AccessTokenGuardData(node: json)
     }
@@ -180,11 +176,7 @@ class AuthorizationGrantsAPI {
         try params.set("guardData.subject", try subject.makeNode(in: nil))
         try params.set("policy", policy.rawValue)
         
-        let res = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
-        
-        guard let json = res.json else {
-            throw ChainError(.badRequest, reason: "Missing JSON response")
-        }
+        let json = try self.client.create(path: "/create-authorization-grant", params: params, skipArray: true)
         
         return try X509GuardData(node: json)
     }
